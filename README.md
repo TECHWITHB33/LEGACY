@@ -328,10 +328,10 @@ This system handles sensitive student identity and payment data. Before deployin
 
 ## 🆘 Support
 
-- **Issues**: [GitHub Issues](https://github.com/yourusername/id-card-system/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/yourusername/id-card-system/discussions)
-- **Email**: support@yourdomain.com
-- **Documentation**: [docs/](docs/)
+- **Issues**: [GitHub Issues](https://github.com/jc1788-byte/id-card-system/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/jc1788-byte/id-card-system/discussions)
+- **Email**:jessicakes1788@gmail.com
+- **Documentation**: [[docs/](docs/)](https://github.com/jc1788-byte)
 
 ## 🎯 Roadmap
 
@@ -353,17 +353,13 @@ This system handles sensitive student identity and payment data. Before deployin
 - [ ] Advanced ML-based fraud detection
 - [ ] Hardware security module (HSM) support
 
-## 👥 Team
 
-- **Lead Developer**: Your Name
-- **Security Officer**: Security Expert
-- **DevOps Engineer**: Infrastructure Expert
 
 ## 📞 Contact
 
-- **Website**: https://yourdomain.com
-- **Email**: info@yourdomain.com
-- **Phone**: +234-XXX-XXX-XXXX
+- **github**:[ https://yourdomain.com](https://github.com/jc1788-byte)
+- **Email**: jessicakes1788@gmail.com
+
 
 ## 🙏 Acknowledgments
 
@@ -374,4 +370,4 @@ This system handles sensitive student identity and payment data. Before deployin
 
 ---
 
-Made with ❤️ for secure student identity management
+Made with ❤️ for secure student identity management (OLAREWAJU.SAMUEL.OLUSEGUN)
