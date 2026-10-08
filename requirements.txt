@@ -1,0 +1,47 @@
+# Frontend Framework
+streamlit>=1.28.0
+streamlit-webrtc>=0.47.0
+
+# HTTP Client
+requests>=2.31.0
+httpx>=0.25.0
+
+# Cryptography
+pycryptodome>=3.18.0
+
+# QR Code
+qrcode>=7.4
+qrcode-terminal>=1.0
+
+# Computer Vision
+opencv-python>=4.8.0
+pyzbar>=0.1.9
+
+# WebAuthn
+pywebauthn>=0.4.9
+
+# Environment
+python-dotenv>=1.0.0
+
+# Stellar SDK
+stellar-sdk>=20.6.0
+
+# Data Processing
+pandas>=2.0.0
+numpy>=1.24.0
+
+# Date/Time
+python-dateutil>=2.8.2
+
+# Utilities
+pydantic>=2.0.0
+validators>=0.22.0
+
+# Async
+aiohttp>=3.9.0
+
+# Development
+pytest>=7.4.0
+black>=23.10.0
+flake8>=6.1.0
+mypy>=1.6.0

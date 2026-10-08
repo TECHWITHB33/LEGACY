@@ -1,0 +1,26 @@
+.css-1x8cf1d{
+
+    color:white;
+    align:left;
+    padding: 0.40rem 0.75rem;
+    margin:30 , 10, 10, 10; 
+    background:blue; 
+    align-items:right
+
+}
+
+
+.css-1x8cf1d:hover{
+    color:blue;
+    background:white; 
+    border:1px solid blue
+
+}
+
+        
+.css-1x8cf1d:focus:not(:active) {
+    border:1px solid blue;
+    border-color:blue
+    color: green;
+}
+

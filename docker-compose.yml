@@ -1,0 +1,103 @@
+version: '3.8'
+
+services:
+  # Rust Backend API
+  backend:
+    build:
+      context: .
+      dockerfile: docker/backend.Dockerfile
+    container_name: id-card-backend
+    ports:
+      - "8080:8080"
+    environment:
+      - DATABASE_URL=sqlite:///app/data/id_card_system.db
+      - RUST_LOG=info
+      - SERVER_HOST=0.0.0.0
+      - SERVER_PORT=8080
+      - JWT_SECRET=${JWT_SECRET:-change-me-to-secure-random-key}
+      - JWT_EXPIRY=3600
+      - STELLAR_NETWORK=testnet
+      - STELLAR_HORIZON_URL=https://horizon-testnet.stellar.org
+      - ENABLE_BIOMETRIC_AUTH=true
+      - ENABLE_STELLAR_PAYMENTS=true
+      - ENABLE_QR_VERIFICATION=true
+      - ENABLE_AUDIT_LOGGING=true
+    volumes:
+      - ./backend/data:/app/data
+      - ./backend/migrations:/app/migrations
+    networks:
+      - id-card-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Streamlit Frontend (MVP)
+  frontend-streamlit:
+    build:
+      context: .
+      dockerfile: docker/streamlit.Dockerfile
+    container_name: id-card-frontend-streamlit
+    ports:
+      - "8501:8501"
+    environment:
+      - API_BASE_URL=http://backend:8080/api/v1
+      - STREAMLIT_SERVER_PORT=8501
+      - STREAMLIT_SERVER_ADDRESS=0.0.0.0
+    depends_on:
+      - backend
+    networks:
+      - id-card-network
+    restart: unless-stopped
+
+  # React Frontend (Production)
+  frontend-react:
+    build:
+      context: ./frontend_react
+      dockerfile: ../docker/react.Dockerfile
+    container_name: id-card-frontend-react
+    ports:
+      - "3000:80"
+    environment:
+      - VITE_API_URL=http://backend:8080/api/v1
+    depends_on:
+      - backend
+    networks:
+      - id-card-network
+    restart: unless-stopped
+
+  # Optional: PostgreSQL Database (for production)
+  # postgres:
+  #   image: postgres:15-alpine
+  #   container_name: id-card-db
+  #   environment:
+  #     - POSTGRES_USER=id_card_user
+  #     - POSTGRES_PASSWORD=${DB_PASSWORD:-change-me}
+  #     - POSTGRES_DB=id_card_system
+  #   volumes:
+  #     - postgres_data:/var/lib/postgresql/data
+  #   networks:
+  #     - id-card-network
+  #   restart: unless-stopped
+
+  # Optional: Redis Cache
+  # redis:
+  #   image: redis:7-alpine
+  #   container_name: id-card-redis
+  #   ports:
+  #     - "6379:6379"
+  #   volumes:
+  #     - redis_data:/data
+  #   networks:
+  #     - id-card-network
+  #   restart: unless-stopped
+
+networks:
+  id-card-network:
+    driver: bridge
+
+volumes:
+  postgres_data:
+  redis_data:

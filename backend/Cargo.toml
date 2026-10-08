@@ -1,0 +1,86 @@
+[package]
+name = "id-card-system"
+version = "1.0.0"
+edition = "2021"
+authors = ["ID Cared Software Team"]
+description = "Enhanced Student Identity Card Security System with Blockchain & Biometric Auth"
+
+[dependencies]
+# Web Framework
+actix-web = "4.4"
+actix-rt = "2.9"
+
+# Async Runtime
+tokio = { version = "1.35", features = ["full"] }
+
+# Serialization
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+
+# Database
+sqlx = { version = "0.7", features = ["runtime-tokio-native-tls", "sqlite", "uuid", "chrono"] }
+sqlx-cli = "0.7"
+
+# Cryptography
+sha2 = "0.10"
+ed25519-dalek = "2.1"
+p256 = "0.13"
+rand = "0.8"
+hex = "0.4"
+base64 = "0.21"
+
+# JWT
+jsonwebtoken = "9.2"
+
+# UUID
+uuid = { version = "1.6", features = ["v4", "serde"] }
+
+# DateTime
+chrono = { version = "0.4", features = ["serde"] }
+
+# Environment Variables
+dotenv = "0.15"
+
+# Logging
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter", "json"] }
+
+# Error Handling
+thiserror = "1.0"
+anyhow = "1.0"
+
+# Configuration
+config = "0.13"
+
+# Validation
+validator = { version = "0.16", features = ["derive"] }
+
+# QR Code (for generation/verification)
+qrcode = "0.13"
+
+# Encryption at rest
+aes-gcm = "0.10"        # AES-256-GCM for private key encryption
+pbkdf2 = "0.12"         # PBKDF2 key derivation for passwords
+
+# HTTP Client
+reqwest = { version = "0.11", features = ["json"] }
+
+# Date/Time parsing
+parse_duration = "2.1"
+
+# Stellar Payment Integration (TESTNET ONLY)
+soroban-client = "0.5"  # RPC + transaction building for Stellar
+stellar-xdr = { version = "21", features = ["std", "serde", "base64"] }  # XDR encoding/decoding
+stellar-strkey = "0.0.8"  # Stellar address encoding/decoding
+
+# URL encoding for Stellar URIs
+urlencoding = "2.1"
+
+[[bin]]
+name = "id-card-system"
+path = "src/main.rs"
+
+[profile.release]
+opt-level = 3
+lto = true
+codegen-units = 1
