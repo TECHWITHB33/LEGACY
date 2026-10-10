@@ -1,6 +1,6 @@
 # 🎓 Student Identity Card Security System
 
-[![CI Status](https://github.com/jc1788-byte/id-card-system/actions/workflows/ci.yml/badge.svg)](https://github.com/jc1788-byte/id-card-system/actions)
+[![CI Status](https://github.com/TECHWITHB33/LEGACY/actions/workflows/ci.yml/badge.svg)](https://github.com/TECHWITHB33/LEGACY/actions)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Rust 1.70+](https://img.shields.io/badge/Rust-1.70%2B-orange)](https://www.rust-lang.org/)
 

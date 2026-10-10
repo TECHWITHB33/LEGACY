@@ -7,7 +7,6 @@ on:
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ github.repository }}
 
 jobs:
   build-and-push:
@@ -20,6 +19,10 @@ jobs:
     - uses: actions/checkout@v4
     
     - uses: docker/setup-buildx-action@v2
+
+    - name: Normalize image name
+      id: image-name
+      run: echo "value=${GITHUB_REPOSITORY,,}" >> "$GITHUB_OUTPUT"
     
     - uses: docker/login-action@v2
       with:
@@ -34,8 +37,8 @@ jobs:
         file: ./docker/backend.Dockerfile
         push: true
         tags: |
-          ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/backend:latest
-          ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/backend:${{ github.sha }}
+          ${{ env.REGISTRY }}/${{ steps.image-name.outputs.value }}/backend:latest
+          ${{ env.REGISTRY }}/${{ steps.image-name.outputs.value }}/backend:${{ github.sha }}
         cache-from: type=gha
         cache-to: type=gha,mode=max
     
@@ -46,8 +49,8 @@ jobs:
         file: ./docker/streamlit.Dockerfile
         push: true
         tags: |
-          ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/frontend-streamlit:latest
-          ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/frontend-streamlit:${{ github.sha }}
+          ${{ env.REGISTRY }}/${{ steps.image-name.outputs.value }}/frontend-streamlit:latest
+          ${{ env.REGISTRY }}/${{ steps.image-name.outputs.value }}/frontend-streamlit:${{ github.sha }}
         cache-from: type=gha
         cache-to: type=gha,mode=max
     
@@ -58,8 +61,8 @@ jobs:
         file: ./docker/react.Dockerfile
         push: true
         tags: |
-          ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/frontend-react:latest
-          ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/frontend-react:${{ github.sha }}
+          ${{ env.REGISTRY }}/${{ steps.image-name.outputs.value }}/frontend-react:latest
+          ${{ env.REGISTRY }}/${{ steps.image-name.outputs.value }}/frontend-react:${{ github.sha }}
         cache-from: type=gha
         cache-to: type=gha,mode=max
 
