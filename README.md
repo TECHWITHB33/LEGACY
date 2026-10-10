@@ -1,6 +1,6 @@
 # 🎓 Student Identity Card Security System
 
-[![CI Status](https://github.com/yourusername/id-card-system/actions/workflows/ci.yml/badge.svg)](https://github.com/yourusername/id-card-system/actions)
+[![CI Status](https://github.com/jc1788-byte/id-card-system/actions/workflows/ci.yml/badge.svg)](https://github.com/jc1788-byte/id-card-system/actions)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Rust 1.70+](https://img.shields.io/badge/Rust-1.70%2B-orange)](https://www.rust-lang.org/)
 
@@ -228,7 +228,7 @@ curl -X POST http://localhost:8080/api/v1/auth/register \
     "matric_number": "MTN/SCI/001/2023",
     "age": 20,
     "gender": "Male",
-    "department": "Computer Science",
+    "department": "Cyber Security",
     "phone_contact": "+2341234567890"
   }'
 ```
@@ -370,4 +370,4 @@ This system handles sensitive student identity and payment data. Before deployin
 
 ---
 
-Made with ❤️ for secure student identity management (OLAREWAJU.SAMUEL.OLUSEGUN)
+Made with ❤️ for secure student identity management by yours truely(O.S.O)
