@@ -298,6 +298,142 @@ pub struct AuditLog {
 }
 
 // ============================================================================
+// INVOICE AND ESCROW MODELS
+// ============================================================================
+
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, sqlx::Type)]
+#[sqlx(type_name = "TEXT")]
+pub enum InvoiceState {
+    #[serde(rename = "Draft")]
+    Draft,
+    #[serde(rename = "Submitted")]
+    Submitted,
+    #[serde(rename = "Funded")]
+    Funded,
+    #[serde(rename = "Processing")]
+    Processing,
+    #[serde(rename = "Settled")]
+    Settled,
+    #[serde(rename = "Closed")]
+    Closed,
+}
+
+impl InvoiceState {
+    pub fn as_str(&self) -> &str {
+        match self {
+            InvoiceState::Draft => "Draft",
+            InvoiceState::Submitted => "Submitted",
+            InvoiceState::Funded => "Funded",
+            InvoiceState::Processing => "Processing",
+            InvoiceState::Settled => "Settled",
+            InvoiceState::Closed => "Closed",
+        }
+    }
+
+    pub fn from_str(s: &str) -> Result<Self, String> {
+        match s {
+            "Draft" => Ok(InvoiceState::Draft),
+            "Submitted" => Ok(InvoiceState::Submitted),
+            "Funded" => Ok(InvoiceState::Funded),
+            "Processing" => Ok(InvoiceState::Processing),
+            "Settled" => Ok(InvoiceState::Settled),
+            "Closed" => Ok(InvoiceState::Closed),
+            _ => Err(format!("Invalid invoice state: {}", s)),
+        }
+    }
+}
+
+impl std::fmt::Display for InvoiceState {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.as_str())
+    }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, sqlx::FromRow)]
+pub struct Invoice {
+    pub id: String,
+    pub borrower_id: String,
+    pub amount: String,
+    pub state: String,
+    pub created_at: DateTime<Utc>,
+    pub updated_at: DateTime<Utc>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, sqlx::FromRow)]
+pub struct Escrow {
+    pub id: String,
+    pub invoice_id: String,
+    pub investor_account: String,
+    pub borrower_account: String,
+    pub amount: String,
+    pub settlement_expiry: DateTime<Utc>,
+    pub soroban_contract_id: Option<String>,
+    pub created_at: DateTime<Utc>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, sqlx::FromRow)]
+pub struct EscrowStateHistory {
+    pub id: String,
+    pub escrow_id: String,
+    pub previous_state: String,
+    pub new_state: String,
+    pub timestamp: DateTime<Utc>,
+    pub details: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, sqlx::FromRow)]
+pub struct SettlementFee {
+    pub id: String,
+    pub invoice_id: String,
+    pub fee_type: String,
+    pub amount: String,
+    pub currency: String,
+    pub recorded_at: DateTime<Utc>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct FeeBreakdown {
+    pub platform_fee: String,
+    pub network_fee: String,
+    pub currency_conversion_fee: String,
+    pub total_fees: String,
+}
+
+// ============================================================================
+// INVOICE AND ESCROW REQUEST/RESPONSE MODELS
+// ============================================================================
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct CreateInvoiceRequest {
+    pub borrower_id: String,
+    pub amount: String,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct UpdateInvoiceStateRequest {
+    pub invoice_id: String,
+    pub new_state: String,
+    pub details_json: Option<String>,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct CreateEscrowRequest {
+    pub invoice_id: String,
+    pub investor_account: String,
+    pub settlement_expiry_unix_timestamp: u64,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct EscrowResponse {
+    pub id: String,
+    pub invoice_id: String,
+    pub investor_account: String,
+    pub amount: String,
+    pub state: String,
+    pub soroban_contract_id: Option<String>,
+}
+
+// ============================================================================
 // BLOCKCHAIN-SPECIFIC MODELS
 // ============================================================================
 
