@@ -11,20 +11,19 @@ pycryptodome>=3.18.0
 
 # QR Code
 qrcode>=7.4
-qrcode-terminal>=1.0
 
 # Computer Vision
 opencv-python>=4.8.0
 pyzbar>=0.1.9
 
 # WebAuthn
-pywebauthn>=0.4.9
+webauthn>=2.0.0
 
 # Environment
 python-dotenv>=1.0.0
 
 # Stellar SDK
-stellar-sdk>=20.6.0
+stellar-sdk>=13.0.0
 
 # Data Processing
 pandas>=2.0.0
