@@ -21,6 +21,11 @@ pub enum AuditEvent {
     PaymentRejected,
     PaymentSubmitted,
     PaymentConfirmed,
+    InvoiceCreated,
+    InvoiceStateChanged,
+    InvoiceRefunded,
+    SettlementFeeRecorded,
+    GlobalAdvancementExecuted,
 }
 
 impl AuditEvent {
@@ -41,6 +46,11 @@ impl AuditEvent {
             AuditEvent::PaymentRejected => "PAYMENT_REJECTED",
             AuditEvent::PaymentSubmitted => "PAYMENT_SUBMITTED",
             AuditEvent::PaymentConfirmed => "PAYMENT_CONFIRMED",
+            AuditEvent::InvoiceCreated => "INVOICE_CREATED",
+            AuditEvent::InvoiceStateChanged => "INVOICE_STATE_CHANGED",
+            AuditEvent::InvoiceRefunded => "INVOICE_REFUNDED",
+            AuditEvent::SettlementFeeRecorded => "SETTLEMENT_FEE_RECORDED",
+            AuditEvent::GlobalAdvancementExecuted => "GLOBAL_ADVANCEMENT_EXECUTED",
         }
     }
 }

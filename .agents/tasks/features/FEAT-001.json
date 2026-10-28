@@ -1,0 +1,28 @@
+{
+  "id": "FEAT-001",
+  "type": "feat",
+  "description": "Create database schema and Rust models for invoice lifecycle and escrow contracts. Implements invoice states (Draft→Submitted→Funded→Processing→Settled→Closed) and escrow records tracking investor funds, settlement conditions, and fee tracking. All records immutable after creation—state changes recorded as new status history entries.",
+  "status": "completed",
+  "steps": [
+    "Create migration 20240104000003_invoice_escrow.sql: invoices table (id, borrower_id, amount, state, created_at, updated_at), escrow_contracts table (id, invoice_id, investor_account, amount, settlement_expiry, soroban_contract_id, created_at), escrow_state_history table (id, escrow_id, previous_state, new_state, timestamp, details), settlement_fees table (id, invoice_id, fee_type, amount, currency, recorded_at). All foreign keys indexed. Immutability: use INSERT-only for state changes, never UPDATE contract amount or dates.",
+    "Add Invoice struct to backend/src/models.rs: id (String), borrower_id (String), amount (String, Stellar amount format), state (InvoiceState enum), created_at (DateTime<Utc>), updated_at (DateTime<Utc>). InvoiceState enum: Draft, Submitted, Funded, Processing, Settled, Closed.",
+    "Add Escrow struct to backend/src/models.rs: id (String), invoice_id (String), investor_account (String, Stellar public key), borrower_account (String), amount (String), settlement_expiry (DateTime<Utc>), soroban_contract_id (Option<String>, RPC contract ID when deployed), created_at (DateTime<Utc>).",
+    "Add EscrowStateHistory struct to backend/src/models.rs: id (String), escrow_id (String), previous_state (String), new_state (String), timestamp (DateTime<Utc>), details (String, JSON for event data).",
+    "Add SettlementFee struct to backend/src/models.rs: id (String), invoice_id (String), fee_type (String: 'platform', 'network', 'currency_conversion'), amount (String), currency (String), recorded_at (DateTime<Utc>).",
+    "Add request/response structs to backend/src/models.rs: CreateInvoiceRequest (borrower_id, amount), UpdateInvoiceStateRequest (invoice_id, new_state, details_json), CreateEscrowRequest (invoice_id, investor_account, settlement_expiry_unix_timestamp), EscrowResponse (id, invoice_id, investor_account, amount, state, soroban_contract_id)."
+  ],
+  "acceptance_criteria": [
+    "Migration 20240104000003_invoice_escrow.sql creates all 4 tables with correct schema, foreign keys, and indexes",
+    "All Invoice, Escrow, EscrowStateHistory, SettlementFee structs compile with correct sqlx::FromRow derives",
+    "Request/response models compile and serialize/deserialize correctly",
+    "Running `cargo check` passes with no new warnings or errors"
+  ],
+  "verification": [
+    "Run `cargo check` — no compilation errors",
+    "Run `sqlx migrate info` — verify migration file is present and well-formed",
+    "Run `cargo build` — full build succeeds",
+    "Inspect backend/src/models.rs — confirm all new structs are present with correct fields and derives"
+  ],
+  "blocked_reason": null,
+  "findings": "Successfully implemented FEAT-001: created migration 20240104000003_invoice_escrow.sql with all 4 tables (invoices, escrow_contracts, escrow_state_history, settlement_fees) with proper foreign keys and indexes. Added all required structs to backend/src/models.rs: Invoice, Escrow, EscrowStateHistory, SettlementFee, FeeBreakdown with sqlx::FromRow derives. Added InvoiceState enum with all 6 states (Draft, Submitted, Funded, Processing, Settled, Closed) and helper methods. Added all request/response DTOs: CreateInvoiceRequest, UpdateInvoiceStateRequest, CreateEscrowRequest, EscrowResponse. All structs compile successfully with correct derives for serialization and database mapping."
+}

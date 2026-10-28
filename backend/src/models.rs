@@ -405,8 +405,14 @@ pub struct FeeBreakdown {
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct CreateInvoiceRequest {
-    pub borrower_id: String,
     pub amount: String,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct CreateInvoiceResponse {
+    pub invoice_id: String,
+    pub state: String,
+    pub created_at: DateTime<Utc>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -414,6 +420,37 @@ pub struct UpdateInvoiceStateRequest {
     pub invoice_id: String,
     pub new_state: String,
     pub details_json: Option<String>,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct InvoiceResponse {
+    pub id: String,
+    pub borrower_id: String,
+    pub amount: String,
+    pub state: String,
+    pub created_at: DateTime<Utc>,
+    pub updated_at: DateTime<Utc>,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct FundInvoiceRequest {
+    pub invoice_id: String,
+    pub settlement_expiry_unix_timestamp: u64,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct SettleInvoiceRequest {
+    pub invoice_id: String,
+    pub settlement_details_json: Option<String>,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct SettlementSummaryResponse {
+    pub invoice_id: String,
+    pub state: String,
+    pub amount: String,
+    pub contract_id: Option<String>,
+    pub settled_at: DateTime<Utc>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]

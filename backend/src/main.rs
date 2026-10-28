@@ -21,6 +21,8 @@ mod jwt;
 mod audit;
 mod contracts;
 mod services;
+mod invoice_lifecycle;
+mod global_advancement;
 
 use actix_web::{web, App, HttpServer, middleware as actix_middleware};
 use sqlx::sqlite::SqlitePool;
@@ -142,6 +144,18 @@ async fn main() -> std::io::Result<()> {
                     .route("/audit-log", web::get().to(handlers::admin::get_audit_log))
                     .route("/stats", web::get().to(handlers::admin::get_stats))
                     .route("/users", web::get().to(handlers::admin::list_users))
+            )
+            // Escrow and Invoice routes (protected)
+            .service(
+                web::scope("/api/v1/escrow")
+                    .wrap(middleware::JwtMiddleware)
+                    .route("/invoices", web::post().to(handlers::escrow::create_invoice))
+                    .route("/invoices/{id}/submit", web::post().to(handlers::escrow::submit_invoice))
+                    .route("/invoices/{id}/fund", web::post().to(handlers::escrow::fund_invoice))
+                    .route("/invoices/{id}", web::get().to(handlers::escrow::get_invoice))
+                    .route("/invoices", web::get().to(handlers::escrow::list_invoices))
+                    .route("/invoices/{id}/settle", web::post().to(handlers::escrow::settle_invoice))
+                    .route("/contracts/{contract_id}", web::get().to(handlers::escrow::get_escrow_status))
             )
     })
     .bind(format!("{}:{}", host, port))?

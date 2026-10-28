@@ -1,0 +1,33 @@
+{
+  "id": "FEAT-004",
+  "type": "feat",
+  "description": "Implement REST API handlers for escrow and invoice lifecycle endpoints. Wire routes in main.rs under /api/v1/escrow and /api/v1/invoices with JWT middleware. All handlers follow fail-closed auth pattern: reject by default, require explicit authorization.",
+  "status": "pending",
+  "steps": [
+    "Create backend/src/handlers/escrow.rs: handler functions following pattern from backend/src/handlers/payment.rs. (1) async fn create_invoice(req: web::Json<CreateInvoiceRequest>, pool: web::Data<Arc<SqlitePool>>, config: web::Data<Arc<Config>>) -> Result<HttpResponse, ApiError> — extract borrower_id from JWT, create invoice via InvoiceLifecycleService, return CreateInvoiceResponse(invoice_id, state). (2) async fn submit_invoice(req: web::Json<UpdateInvoiceStateRequest>, ...) -> Result<HttpResponse, ApiError> — verify ownership, call submit_invoice, return InvoiceResponse. (3) async fn fund_invoice(req: web::Json<FundInvoiceRequest>, ...) -> Result<HttpResponse, ApiError> — verify investor authorization, call fund_invoice with investor_account from Stellar session, deploy escrow, return EscrowResponse. (4) async fn get_invoice(path: web::Path<String>, ...) -> Result<HttpResponse, ApiError> — fetch invoice by ID, check authorization (borrower or investor), return InvoiceResponse. (5) async fn list_invoices(query: web::Query<PaginationParams>, ...) -> Result<HttpResponse, ApiError> — list invoices for current user (borrower or investor role), return paginated InvoiceResponse. (6) async fn settle_invoice(req: web::Json<SettleInvoiceRequest>, ...) -> Result<HttpResponse, ApiError> — verify authorized (typically admin/settlement service), execute global advancement, return settlement summary. (7) async fn get_escrow_status(path: web::Path<String>, ...) -> Result<HttpResponse, ApiError> — fetch escrow by contract ID, return EscrowResponse with current on-chain state.",
+    "Create backend/src/handlers/mod.rs update: add `pub mod escrow;` and import escrow handlers.",
+    "Update backend/src/main.rs: add new scope under /api/v1/escrow with JWT middleware wrapping all routes: POST /api/v1/escrow/invoices (create_invoice), POST /api/v1/escrow/invoices/{id}/submit (submit_invoice), POST /api/v1/escrow/invoices/{id}/fund (fund_invoice), GET /api/v1/escrow/invoices/{id} (get_invoice), GET /api/v1/escrow/invoices (list_invoices), POST /api/v1/escrow/invoices/{id}/settle (settle_invoice), GET /api/v1/escrow/contracts/{contract_id} (get_escrow_status). All routes protected by JwtMiddleware.",
+    "Add error mapping: if EscrowService or InvoiceLifecycleService returns errors, map to ApiError variants (PaymentError for settlement issues, ValidationError for state transitions, StellarError for RPC failures).",
+    "Add request/response models to backend/src/models.rs if not in FEAT-001: CreateInvoiceRequest, UpdateInvoiceStateRequest, FundInvoiceRequest, SettleInvoiceRequest, InvoiceResponse, EscrowResponse, SettlementSummaryResponse.",
+    "Add comprehensive integration tests: create invoice → submit → fund (triggers escrow deployment) → settle → close, verify each step audited and state persisted."
+  ],
+  "acceptance_criteria": [
+    "All 7 escrow handler functions implemented with correct signatures",
+    "Routes wired in main.rs under /api/v1/escrow with JWT middleware",
+    "All handlers verify user authorization (fail-closed)",
+    "Successful responses return 200/201 with correct JSON structure",
+    "Errors return appropriate HTTP status (400 for validation, 401 for auth, 500 for server errors)",
+    "Integration test passes: create → submit → fund → settle → close returns correct states and audit entries"
+  ],
+  "verification": [
+    "Run `cargo check` — no compilation errors",
+    "Run `cargo build` — full build succeeds",
+    "Run `cargo test --lib handlers::escrow -- --nocapture` — all handler tests pass",
+    "Run `cargo test --test '*' --nocapture` — integration tests pass (if test directory exists)",
+    "Inspect backend/src/main.rs — /api/v1/escrow routes present with JwtMiddleware",
+    "Inspect backend/src/handlers/escrow.rs — all 7 functions present with correct signatures",
+    "Start server with `cargo run`, POST to /api/v1/escrow/invoices with valid JWT, verify 201 response with invoice_id"
+  ],
+  "blocked_reason": null,
+  "findings": ""
+}

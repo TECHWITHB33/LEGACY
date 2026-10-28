@@ -1,0 +1,7 @@
+{
+  "task_id": "task-soroban-escrow-integration",
+  "task_description": "Integrate and add a modernized global advancement feature using Soroban smart contracts for the Legacy invoice liquidity network on Stellar. Implement escrow contract for holding investor funds, invoice lifecycle management (Draft→Submitted→Funded→Processing→Settled→Closed), and cross-border settlement with fee tracking.",
+  "status": "pending",
+  "feature_order": ["FEAT-001", "FEAT-002", "FEAT-003", "FEAT-004"],
+  "blocked_reason": null
+}

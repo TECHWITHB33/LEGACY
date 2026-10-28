@@ -7,6 +7,7 @@ pub mod biometric;
 pub mod payment_auth;
 pub mod admin;
 pub mod stellar;
+pub mod escrow;
 
 use actix_web::HttpResponse;
 use crate::models::HealthCheckResponse;

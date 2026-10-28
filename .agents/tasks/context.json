@@ -1,0 +1,25 @@
+{
+  "project_type": "Rust/Actix-web REST backend with SQLite database, Stellar testnet integration",
+  "language": "Rust",
+  "build_system": "Cargo + SQLx migrations; cargo build, cargo test, cargo check",
+  "test_framework": "Cargo test (likely built-in; may need to add unit test frameworks)",
+  "build_command": "cargo build --release",
+  "test_command": "cargo test --lib",
+  "verification_instructions": "1. Run `cargo check` to verify compilation. 2. Run `cargo build` to create release binary. 3. Run `cargo test --lib` for unit tests. 4. Run `sqlx migrate run` to apply database migrations. 5. Verify endpoints are wired by checking main.rs routes.",
+  "snapshot_or_generated_files": null,
+  "environment_constraints": "Stellar testnet only (no mainnet). Environment vars: DATABASE_URL, SERVER_HOST, SERVER_PORT, JWT_SECRET. Soroban RPC endpoint configured via environment or hardcoded testnet endpoint.",
+  "contribution_requirements": "1. Follow existing error handling pattern (ApiError). 2. Use audit logging for all escrow state transitions. 3. Add unit tests for new service methods. 4. DB migrations must be idempotent. 5. Fail-closed auth: reject by default, whitelist required permissions. 6. Immutable transaction records: never UPDATE invoice/escrow records after creation, only INSERT status change records.",
+  "key_patterns": "1. Models: use sqlx::FromRow, serde::{Serialize,Deserialize}, chrono::DateTime<Utc>, uuid::Uuid. 2. Services: pub struct with impl containing async methods returning Result<T, ApiError>. 3. Handlers: async fn with web::Json<ReqType> parameter, return HttpResponse. 4. DB: use sqlx::query! macro with named parameters, index foreign keys. 5. Errors: map all errors to ApiError variants, include context in error messages. 6. Logging: use tracing::info/warn/error macros. 7. Audit: use crate::audit::log_event for all significant state changes.",
+  "relevant_files": [
+    "backend/src/models.rs — examine Payment, AuditLog structures as patterns",
+    "backend/src/error.rs — understand ApiError variants and ResponseError impl",
+    "backend/src/services/payments.rs — reference for service pattern",
+    "backend/src/handlers/payment.rs — reference for handler pattern",
+    "backend/src/audit.rs — understand audit logging",
+    "backend/src/main.rs — understand routing and wiring",
+    "backend/migrations/20240101000001_init_schema.sql — understand migration style",
+    "backend/migrations/20240103000001_payment_gateway.sql — understand complex schema",
+    "backend/Cargo.toml — understand dependencies; add soroban-sdk if needed"
+  ],
+  "directory_structure": "backend/src/: main source. models.rs, error.rs, main.rs (entry), middleware/, crypto/, database/, handlers/, services/, audit.rs, stellar_payment.rs. backend/migrations/: SQL migration files (numbered YYYYMMDDNNNNN_description.sql). Will add: backend/src/contracts/, backend/src/services/escrow_service.rs, backend/src/handlers/escrow.rs, backend/src/invoice_lifecycle.rs, backend/src/global_advancement.rs."
+}
