@@ -19,6 +19,7 @@ mod stellar;
 mod stellar_payment;
 mod jwt;
 mod audit;
+mod contracts;
 mod services;
 
 use actix_web::{web, App, HttpServer, middleware as actix_middleware};

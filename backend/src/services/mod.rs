@@ -7,6 +7,7 @@ pub mod qr;
 pub mod payments;
 pub mod audit_service;
 pub mod credential_issuer;
+pub mod escrow_service;
 
 pub use authentication::AuthenticationService;
 pub use students::StudentService;
@@ -17,6 +18,7 @@ pub use qr::QrService;
 pub use payments::PaymentService;
 pub use audit_service::AuditService;
 pub use credential_issuer::CredentialIssuerService;
+pub use escrow_service::EscrowService;
 
 use sqlx::SqlitePool;
 use std::sync::Arc;
@@ -32,6 +34,7 @@ pub struct Services {
     pub qr: Arc<QrService>,
     pub payments: Arc<PaymentService>,
     pub audit: Arc<AuditService>,
+    pub escrow: Arc<EscrowService>,
 }
 
 impl Services {
@@ -45,6 +48,7 @@ impl Services {
             qr: Arc::new(QrService::new()),
             payments: Arc::new(PaymentService::new(pool.clone())),
             audit: Arc::new(AuditService::new(pool.clone())),
+            escrow: Arc::new(EscrowService::new(pool.clone(), config.clone())),
         }
     }
 }
