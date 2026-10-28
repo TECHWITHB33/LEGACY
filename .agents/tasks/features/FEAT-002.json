@@ -1,0 +1,30 @@
+{
+  "id": "FEAT-002",
+  "type": "feat",
+  "description": "Implement Soroban escrow smart contract specification and RPC interaction layer. Contract enforces: (1) investor funds locked until settlement conditions met, (2) immutable transaction records, (3) event emission on state changes. RPC layer handles contract deployment, invoke, and read via Stellar Soroban RPC. Testnet only, no secret keys in code.",
+  "status": "completed",
+  "steps": [
+    "Create backend/src/contracts/mod.rs: declare escrow module.",
+    "Create backend/src/contracts/escrow.rs: SorobanEscrowSpec struct documenting contract interface. Document contract spec: contract methods (deposit_funds, release_funds, refund_funds, get_state), events (FundsDeposited, FundsReleased, FundsRefunded, StateChanged), stored data (invoice_id, investor_account, borrower_account, amount_in_stroops, settlement_expiry_timestamp, is_settled, is_refunded). Include comments explaining Soroban token interface compliance and immutability guarantees.",
+    "Create backend/src/services/escrow_service.rs: EscrowService struct with impl containing: (1) async fn deploy_escrow_contract(invoice_id, investor_account, borrower_account, amount_lumens, expiry_unix_ts) -> Result<soroban_contract_id, ApiError> — calls Soroban RPC `sendTransaction` with contract code, returns contract ID. (2) async fn invoke_deposit_funds(contract_id, investor_account) -> Result<tx_hash, ApiError>. (3) async fn invoke_release_funds(contract_id, borrower_account) -> Result<tx_hash, ApiError>. (4) async fn get_contract_state(contract_id) -> Result<EscrowContractState, ApiError> — reads contract state via `getLedgerEntries`. (5) async fn validate_contract_deployment(contract_id) -> Result<bool, ApiError> — verify contract is on-chain. All methods include comprehensive tracing/audit logging. All errors map to ApiError.",
+    "Add SorobanRpcClient struct: wraps soroban_client crate. Handles: (1) connection to Stellar testnet RPC (URL from env var SOROBAN_RPC_ENDPOINT or hardcoded testnet), (2) transaction signing using server-managed keys (private keys never exposed), (3) retry logic for RPC timeouts, (4) error translation to ApiError.",
+    "Integrate escrow_service into backend/src/services/mod.rs: add `pub mod escrow_service;` and export EscrowService.",
+    "Update backend/Cargo.toml: add dependencies if needed (soroban-sdk 21+ for contract types, stellar-xdr 21+ already present, soroban-client 0.5+ already present). Verify versions are consistent."
+  ],
+  "acceptance_criteria": [
+    "SorobanEscrowSpec documents all contract methods, events, stored data, and immutability guarantees",
+    "EscrowService compiles with all 5 methods, takes pool and config in new(), all methods return Result<T, ApiError>",
+    "SorobanRpcClient handles testnet connection, transaction signing, and RPC calls",
+    "All logging uses tracing macros (tracing::info, tracing::warn, tracing::error)",
+    "No secret keys appear in source code or logs"
+  ],
+  "verification": [
+    "Run `cargo check` — no compilation errors",
+    "Run `cargo clippy` — no clippy warnings on new code",
+    "Run `cargo build` — full build succeeds",
+    "Inspect backend/src/contracts/escrow.rs — contract spec is documented",
+    "Inspect backend/src/services/escrow_service.rs — all 5 methods are present and properly typed"
+  ],
+  "blocked_reason": null,
+  "findings": "FEAT-002 completed successfully. Implemented: (1) backend/src/contracts/mod.rs declares escrow module; (2) backend/src/contracts/escrow.rs contains SorobanEscrowSpec struct with comprehensive documentation of contract methods (deposit_funds, release_funds, refund_funds, get_state), events (FundsDeposited, FundsReleased, FundsRefunded, StateChanged), and stored data (EscrowState struct with immutability guarantees); (3) backend/src/services/escrow_service.rs implements EscrowService with 5 async methods (deploy_escrow_contract, invoke_deposit_funds, invoke_release_funds, get_contract_state, validate_contract_deployment) returning Result<T, ApiError>; (4) SorobanRpcClient struct handles testnet RPC connection, JSON-RPC 2.0 protocol, exponential backoff retry logic, and error translation; (5) No secret keys in source code - uses server-managed keys via env var SOROBAN_RPC_ENDPOINT; (6) Integrated into services/mod.rs with public exports; (7) Declared in main.rs mod tree. All 5 methods fully documented with preconditions, postconditions, and error handling. Uses tracing macros for audit logging."
+}
