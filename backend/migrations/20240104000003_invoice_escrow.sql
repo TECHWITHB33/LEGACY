@@ -2,6 +2,31 @@
 -- Handles tokenized invoice lifecycle and investor escrow contracts on Stellar
 -- All records immutable after creation: state changes recorded as new history entries
 
+-- Users table (if not exists)
+CREATE TABLE IF NOT EXISTS users (
+    id TEXT PRIMARY KEY,
+    email TEXT UNIQUE NOT NULL,
+    password_hash TEXT NOT NULL,
+    password_salt TEXT NOT NULL,
+    created_at DATETIME NOT NULL
+);
+
+-- Audit logs: immutable audit trail for compliance
+CREATE TABLE IF NOT EXISTS audit_logs (
+    id TEXT PRIMARY KEY,
+    user_id TEXT NOT NULL,
+    event_type TEXT NOT NULL,
+    resource_type TEXT NOT NULL,
+    resource_id TEXT,
+    details TEXT,
+    created_at DATETIME NOT NULL,
+    FOREIGN KEY (user_id) REFERENCES users(id)
+);
+
+CREATE INDEX idx_audit_logs_user_id ON audit_logs(user_id);
+CREATE INDEX idx_audit_logs_event_type ON audit_logs(event_type);
+CREATE INDEX idx_audit_logs_created_at ON audit_logs(created_at);
+
 -- Invoices table: core invoice records with state lifecycle
 CREATE TABLE IF NOT EXISTS invoices (
     id TEXT PRIMARY KEY,

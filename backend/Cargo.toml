@@ -69,12 +69,15 @@ reqwest = { version = "0.11", features = ["json"] }
 parse_duration = "2.1"
 
 # Stellar Payment Integration (TESTNET ONLY)
-soroban-client = "0.5"  # RPC + transaction building for Stellar
+soroban-client = "0.6"  # RPC + transaction building for Stellar
 stellar-xdr = { version = "21", features = ["std", "serde", "base64"] }  # XDR encoding/decoding
 stellar-strkey = "0.0.8"  # Stellar address encoding/decoding
 
 # URL encoding for Stellar URIs
 urlencoding = "2.1"
+
+# Regex for validation
+regex = "1.10"
 
 [[bin]]
 name = "id-card-system"

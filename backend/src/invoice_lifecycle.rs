@@ -1,10 +1,15 @@
+//! Invoice lifecycle state machine
+//!
+//! Manages the complete lifecycle of invoices:
+//! Draft → Submitted → Funded → Processing → Settled → Closed
+
 use crate::error::ApiError;
 use crate::models::{Invoice, InvoiceState};
 use crate::audit::{log_event, AuditEvent};
 use sqlx::SqlitePool;
 use std::sync::Arc;
-use uuid::Uuid;
 use chrono::Utc;
+use uuid::Uuid;
 
 pub struct InvoiceLifecycleService {
     pool: Arc<SqlitePool>,
@@ -23,6 +28,11 @@ impl InvoiceLifecycleService {
     ) -> Result<String, ApiError> {
         let invoice_id = format!("INV-{}", Uuid::new_v4());
         let now = Utc::now();
+
+        tracing::info!(
+            "Creating invoice: invoice_id={}, borrower_id={}, amount={}",
+            invoice_id, borrower_id, amount
+        );
 
         sqlx::query!(
             r#"INSERT INTO invoices (id, borrower_id, amount, state, created_at, updated_at)
@@ -43,33 +53,42 @@ impl InvoiceLifecycleService {
             AuditEvent::InvoiceCreated,
             "Invoice",
             Some(&invoice_id),
-            Some(&format!("Invoice created: amount={}", amount)),
+            Some(&format!("Created in Draft state, amount: {}", amount)),
         )
         .await
         .unwrap_or_else(|e| tracing::error!("Failed to log audit event: {}", e));
-
-        tracing::info!("Invoice created: id={}, borrower={}, amount={}", invoice_id, borrower_id, amount);
 
         Ok(invoice_id)
     }
 
     /// Transition invoice from Draft to Submitted
     pub async fn submit_invoice(&self, invoice_id: &str) -> Result<(), ApiError> {
-        // Get current invoice
-        let invoice = self.get_invoice(invoice_id).await?;
+        tracing::info!("Submitting invoice: invoice_id={}", invoice_id);
 
-        // Validate current state
-        if invoice.state != "Draft" {
-            return Err(ApiError::ValidationError(format!(
-                "Invalid state transition: {} -> Submitted",
-                invoice.state
-            )));
+        // Fetch current invoice
+        let invoice = sqlx::query_as::<_, Invoice>(
+            "SELECT id, borrower_id, amount, state, created_at, updated_at FROM invoices WHERE id = ?"
+        )
+        .bind(invoice_id)
+        .fetch_optional(self.pool.as_ref())
+        .await?
+        .ok_or_else(|| ApiError::ValidationError(format!("Invoice not found: {}", invoice_id)))?;
+
+        // Validate state transition
+        let current_state = InvoiceState::from_str(&invoice.state)
+            .ok_or_else(|| ApiError::ValidationError(format!("Invalid invoice state: {}", invoice.state)))?;
+        
+        let next_state = InvoiceState::Submitted;
+        if !current_state.can_transition_to(&next_state) {
+            return Err(ApiError::ValidationError(
+                format!("Cannot transition from {} to {}", current_state.as_str(), next_state.as_str())
+            ));
         }
 
-        // Update invoice state
+        // Update state
         let now = Utc::now();
         sqlx::query!(
-            r#"UPDATE invoices SET state = ?, updated_at = ? WHERE id = ?"#,
+            "UPDATE invoices SET state = ?, updated_at = ? WHERE id = ?",
             "Submitted",
             now,
             invoice_id,
@@ -77,7 +96,6 @@ impl InvoiceLifecycleService {
         .execute(self.pool.as_ref())
         .await?;
 
-        // Log state change to audit
         log_event(
             &self.pool,
             &invoice.borrower_id,
@@ -89,32 +107,40 @@ impl InvoiceLifecycleService {
         .await
         .unwrap_or_else(|e| tracing::error!("Failed to log audit event: {}", e));
 
-        tracing::info!("Invoice submitted: id={}", invoice_id);
-
         Ok(())
     }
 
     /// Transition invoice from Submitted to Funded
-    pub async fn fund_invoice(
-        &self,
-        invoice_id: &str,
-        investor_account: &str,
-    ) -> Result<(), ApiError> {
-        // Get current invoice
-        let invoice = self.get_invoice(invoice_id).await?;
+    pub async fn fund_invoice(&self, invoice_id: &str, investor_id: &str) -> Result<(), ApiError> {
+        tracing::info!(
+            "Funding invoice: invoice_id={}, investor_id={}",
+            invoice_id, investor_id
+        );
 
-        // Validate current state
-        if invoice.state != "Submitted" {
-            return Err(ApiError::ValidationError(format!(
-                "Invalid state transition: {} -> Funded",
-                invoice.state
-            )));
+        // Fetch current invoice
+        let invoice = sqlx::query_as::<_, Invoice>(
+            "SELECT id, borrower_id, amount, state, created_at, updated_at FROM invoices WHERE id = ?"
+        )
+        .bind(invoice_id)
+        .fetch_optional(self.pool.as_ref())
+        .await?
+        .ok_or_else(|| ApiError::ValidationError(format!("Invoice not found: {}", invoice_id)))?;
+
+        // Validate state transition
+        let current_state = InvoiceState::from_str(&invoice.state)
+            .ok_or_else(|| ApiError::ValidationError(format!("Invalid invoice state: {}", invoice.state)))?;
+        
+        let next_state = InvoiceState::Funded;
+        if !current_state.can_transition_to(&next_state) {
+            return Err(ApiError::ValidationError(
+                format!("Cannot transition from {} to {}", current_state.as_str(), next_state.as_str())
+            ));
         }
 
-        // Update invoice state
+        // Update state
         let now = Utc::now();
         sqlx::query!(
-            r#"UPDATE invoices SET state = ?, updated_at = ? WHERE id = ?"#,
+            "UPDATE invoices SET state = ?, updated_at = ? WHERE id = ?",
             "Funded",
             now,
             invoice_id,
@@ -122,44 +148,35 @@ impl InvoiceLifecycleService {
         .execute(self.pool.as_ref())
         .await?;
 
-        // Log state change to audit
         log_event(
             &self.pool,
-            &invoice.borrower_id,
+            investor_id,
             AuditEvent::InvoiceStateChanged,
             "Invoice",
             Some(invoice_id),
-            Some(&format!("Submitted -> Funded (investor: {})", investor_account)),
+            Some("Submitted -> Funded"),
         )
         .await
         .unwrap_or_else(|e| tracing::error!("Failed to log audit event: {}", e));
 
-        tracing::info!(
-            "Invoice funded: id={}, investor={}",
-            invoice_id,
-            investor_account
-        );
-
         Ok(())
     }
 
-    /// Transition invoice from Funded to Processing
+    /// Transition invoice to Processing (internal state before settlement)
     pub async fn mark_processing(&self, invoice_id: &str) -> Result<(), ApiError> {
-        // Get current invoice
-        let invoice = self.get_invoice(invoice_id).await?;
+        tracing::info!("Marking invoice as processing: invoice_id={}", invoice_id);
 
-        // Validate current state
-        if invoice.state != "Funded" {
-            return Err(ApiError::ValidationError(format!(
-                "Invalid state transition: {} -> Processing",
-                invoice.state
-            )));
-        }
+        let invoice = sqlx::query_as::<_, Invoice>(
+            "SELECT id, borrower_id, amount, state, created_at, updated_at FROM invoices WHERE id = ?"
+        )
+        .bind(invoice_id)
+        .fetch_optional(self.pool.as_ref())
+        .await?
+        .ok_or_else(|| ApiError::ValidationError(format!("Invoice not found: {}", invoice_id)))?;
 
-        // Update invoice state
         let now = Utc::now();
         sqlx::query!(
-            r#"UPDATE invoices SET state = ?, updated_at = ? WHERE id = ?"#,
+            "UPDATE invoices SET state = ?, updated_at = ? WHERE id = ?",
             "Processing",
             now,
             invoice_id,
@@ -167,44 +184,35 @@ impl InvoiceLifecycleService {
         .execute(self.pool.as_ref())
         .await?;
 
-        // Log state change to audit
-        log_event(
-            &self.pool,
-            &invoice.borrower_id,
-            AuditEvent::InvoiceStateChanged,
-            "Invoice",
-            Some(invoice_id),
-            Some("Funded -> Processing"),
-        )
-        .await
-        .unwrap_or_else(|e| tracing::error!("Failed to log audit event: {}", e));
-
-        tracing::info!("Invoice marked as processing: id={}", invoice_id);
-
         Ok(())
     }
 
     /// Transition invoice from Processing to Settled
-    pub async fn settle_invoice(
-        &self,
-        invoice_id: &str,
-        settlement_details_json: &str,
-    ) -> Result<(), ApiError> {
-        // Get current invoice
-        let invoice = self.get_invoice(invoice_id).await?;
+    pub async fn settle_invoice(&self, invoice_id: &str, settlement_details: &str) -> Result<(), ApiError> {
+        tracing::info!("Settling invoice: invoice_id={}", invoice_id);
 
-        // Validate current state
-        if invoice.state != "Processing" {
-            return Err(ApiError::ValidationError(format!(
-                "Invalid state transition: {} -> Settled",
-                invoice.state
-            )));
+        let invoice = sqlx::query_as::<_, Invoice>(
+            "SELECT id, borrower_id, amount, state, created_at, updated_at FROM invoices WHERE id = ?"
+        )
+        .bind(invoice_id)
+        .fetch_optional(self.pool.as_ref())
+        .await?
+        .ok_or_else(|| ApiError::ValidationError(format!("Invoice not found: {}", invoice_id)))?;
+
+        // Validate state transition
+        let current_state = InvoiceState::from_str(&invoice.state)
+            .ok_or_else(|| ApiError::ValidationError(format!("Invalid invoice state: {}", invoice.state)))?;
+        
+        let next_state = InvoiceState::Settled;
+        if !current_state.can_transition_to(&next_state) {
+            return Err(ApiError::ValidationError(
+                format!("Cannot transition from {} to {}", current_state.as_str(), next_state.as_str())
+            ));
         }
 
-        // Update invoice state
         let now = Utc::now();
         sqlx::query!(
-            r#"UPDATE invoices SET state = ?, updated_at = ? WHERE id = ?"#,
+            "UPDATE invoices SET state = ?, updated_at = ? WHERE id = ?",
             "Settled",
             now,
             invoice_id,
@@ -212,171 +220,78 @@ impl InvoiceLifecycleService {
         .execute(self.pool.as_ref())
         .await?;
 
-        // Log state change to audit
         log_event(
             &self.pool,
-            &invoice.borrower_id,
-            AuditEvent::InvoiceStateChanged,
+            "system",
+            AuditEvent::SettlementRecorded,
             "Invoice",
             Some(invoice_id),
-            Some(&format!("Processing -> Settled: {}", settlement_details_json)),
+            Some(&format!("Settlement: {}", settlement_details)),
         )
         .await
         .unwrap_or_else(|e| tracing::error!("Failed to log audit event: {}", e));
-
-        tracing::info!("Invoice settled: id={}", invoice_id);
 
         Ok(())
     }
 
     /// Transition invoice from Settled to Closed
     pub async fn close_invoice(&self, invoice_id: &str) -> Result<(), ApiError> {
-        // Get current invoice
-        let invoice = self.get_invoice(invoice_id).await?;
+        tracing::info!("Closing invoice: invoice_id={}", invoice_id);
 
-        // Validate current state
-        if invoice.state != "Settled" {
-            return Err(ApiError::ValidationError(format!(
-                "Invalid state transition: {} -> Closed",
-                invoice.state
-            )));
-        }
-
-        // Update invoice state
-        let now = Utc::now();
-        sqlx::query!(
-            r#"UPDATE invoices SET state = ?, updated_at = ? WHERE id = ?"#,
-            "Closed",
-            now,
-            invoice_id,
-        )
-        .execute(self.pool.as_ref())
-        .await?;
-
-        // Log state change to audit
-        log_event(
-            &self.pool,
-            &invoice.borrower_id,
-            AuditEvent::InvoiceStateChanged,
-            "Invoice",
-            Some(invoice_id),
-            Some("Settled -> Closed"),
-        )
-        .await
-        .unwrap_or_else(|e| tracing::error!("Failed to log audit event: {}", e));
-
-        tracing::info!("Invoice closed: id={}", invoice_id);
-
-        Ok(())
-    }
-
-    /// Refund invoice from any state with a reason
-    pub async fn refund_invoice(
-        &self,
-        invoice_id: &str,
-        reason: &str,
-    ) -> Result<(), ApiError> {
-        // Get current invoice
-        let invoice = self.get_invoice(invoice_id).await?;
-
-        // Validate reason is not empty
-        if reason.is_empty() {
-            return Err(ApiError::ValidationError(
-                "Refund reason cannot be empty".to_string(),
-            ));
-        }
-
-        // Update invoice state to Closed (terminal state after refund)
-        let now = Utc::now();
-        sqlx::query!(
-            r#"UPDATE invoices SET state = ?, updated_at = ? WHERE id = ?"#,
-            "Closed",
-            now,
-            invoice_id,
-        )
-        .execute(self.pool.as_ref())
-        .await?;
-
-        // Log refund to audit
-        log_event(
-            &self.pool,
-            &invoice.borrower_id,
-            AuditEvent::InvoiceRefunded,
-            "Invoice",
-            Some(invoice_id),
-            Some(&format!("{} -> Closed (refunded: {})", invoice.state, reason)),
-        )
-        .await
-        .unwrap_or_else(|e| tracing::error!("Failed to log audit event: {}", e));
-
-        tracing::info!("Invoice refunded: id={}, reason={}", invoice_id, reason);
-
-        Ok(())
-    }
-
-    // Helper: get invoice by ID
-    async fn get_invoice(&self, invoice_id: &str) -> Result<Invoice, ApiError> {
         let invoice = sqlx::query_as::<_, Invoice>(
-            "SELECT * FROM invoices WHERE id = ?"
+            "SELECT id, borrower_id, amount, state, created_at, updated_at FROM invoices WHERE id = ?"
         )
         .bind(invoice_id)
         .fetch_optional(self.pool.as_ref())
         .await?
         .ok_or_else(|| ApiError::ValidationError(format!("Invoice not found: {}", invoice_id)))?;
 
-        Ok(invoice)
-    }
-}
+        let now = Utc::now();
+        sqlx::query!(
+            "UPDATE invoices SET state = ?, updated_at = ? WHERE id = ?",
+            "Closed",
+            now,
+            invoice_id,
+        )
+        .execute(self.pool.as_ref())
+        .await?;
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_valid_state_transitions() {
-        // Valid transitions:
-        // Draft -> Submitted -> Funded -> Processing -> Settled -> Closed
-        // Refund from any state -> Closed
-        assert!(true); // Actual testing would require database setup
+        Ok(())
     }
 
-    #[test]
-    fn test_invalid_state_transitions() {
-        // Invalid: Draft -> Funded (must go through Submitted)
-        // Invalid: Funded -> Submitted (reverse not allowed)
-        // Invalid: Closed -> Submitted (terminal state)
-        assert!(true); // Actual testing would require database setup
-    }
+    /// Refund invoice (back to Draft or initial state)
+    pub async fn refund_invoice(&self, invoice_id: &str, reason: &str) -> Result<(), ApiError> {
+        tracing::info!("Refunding invoice: invoice_id={}, reason={}", invoice_id, reason);
 
-    #[test]
-    fn test_invoice_creation_sets_draft_state() {
-        // New invoice should always start in Draft state
-        assert!(true); // Actual testing would require database setup
-    }
+        let invoice = sqlx::query_as::<_, Invoice>(
+            "SELECT id, borrower_id, amount, state, created_at, updated_at FROM invoices WHERE id = ?"
+        )
+        .bind(invoice_id)
+        .fetch_optional(self.pool.as_ref())
+        .await?
+        .ok_or_else(|| ApiError::ValidationError(format!("Invoice not found: {}", invoice_id)))?;
 
-    #[test]
-    fn test_refund_from_any_state() {
-        // Refund should be allowed from Draft, Submitted, Funded, Processing, Settled
-        // After refund, state becomes Closed
-        assert!(true); // Actual testing would require database setup
-    }
+        let now = Utc::now();
+        sqlx::query!(
+            "UPDATE invoices SET state = ?, updated_at = ? WHERE id = ?",
+            "Draft",
+            now,
+            invoice_id,
+        )
+        .execute(self.pool.as_ref())
+        .await?;
 
-    #[test]
-    fn test_audit_logging_on_state_change() {
-        // Each state transition should generate an audit log entry
-        assert!(true); // Actual testing would require database setup
-    }
+        log_event(
+            &self.pool,
+            "system",
+            AuditEvent::InvoiceStateChanged,
+            "Invoice",
+            Some(invoice_id),
+            Some(&format!("Refunded: {}", reason)),
+        )
+        .await
+        .unwrap_or_else(|e| tracing::error!("Failed to log audit event: {}", e));
 
-    #[test]
-    fn test_immutability_of_amount() {
-        // Amount should never change after creation
-        // Only state and updated_at should change
-        assert!(true); // Actual testing would require database setup
-    }
-
-    #[test]
-    fn test_state_machine_enforces_valid_transitions() {
-        // Attempting invalid transitions should return ValidationError
-        assert!(true); // Actual testing would require database setup
+        Ok(())
     }
 }

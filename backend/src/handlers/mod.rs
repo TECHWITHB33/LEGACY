@@ -17,6 +17,6 @@ pub async fn health() -> HttpResponse {
     HttpResponse::Ok().json(HealthCheckResponse {
         status: "healthy".to_string(),
         timestamp: Utc::now(),
-        version: env!("CARGO_PKG_VERSION").to_string(),
+        version: Some(env!("CARGO_PKG_VERSION").to_string()),
     })
 }
