@@ -1,14 +1,15 @@
-# 🎓 Student Identity Card Security System
+# 🎓 Legacy: Student Identity & Invoice Liquidity Network
 
 [![CI Status](https://github.com/TECHWITHB33/LEGACY/actions/workflows/ci.yml/badge.svg)](https://github.com/TECHWITHB33/LEGACY/actions)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Rust 1.70+](https://img.shields.io/badge/Rust-1.70%2B-orange)](https://www.rust-lang.org/)
+[![Soroban Smart Contracts](https://img.shields.io/badge/Soroban-Smart%20Contracts-blue)](https://soroban.stellar.org/)
 
-> **Enhanced Student Identity Card Security for Education Sector**
+> **Enterprise-Grade Student Identity & Tokenized Invoice Liquidity Platform**
 > 
-> Blockchain-Based Secure Identity Card System with QR Code Verification, Biometric Authentication, and Stellar Payment Integration
+> Comprehensive system integrating cryptographic identity management, biometric authentication, Stellar payment processing, and modernized Soroban smart contracts for cross-border invoice financing.
 
-## 🌟 Features
+## 🌟 Core Features
 
 ### Identity Management
 - ✅ Student registration with cryptographic identity
@@ -17,45 +18,52 @@
 - ✅ Public key infrastructure (PKI)
 - ✅ Credential lifecycle management
 
-### Security
+### Security & Compliance
 - ✅ SHA256 hashing for data integrity
 - ✅ PBKDF2-SHA256 password key derivation (100k iterations)
 - ✅ Encrypted private key storage (AES-256-GCM)
 - ✅ JWT token-based authentication
+- ✅ Fail-closed authorization patterns
 - ✅ Rate limiting and abuse prevention
-- ✅ Comprehensive audit logging
+- ✅ Comprehensive immutable audit logging
+- ✅ GDPR compliance ready
+- ✅ SOC 2 alignment
 
-### Blockchain
+### Blockchain & Ledger
 - ✅ SHA256-based blockchain with proof-of-work
 - ✅ Immutable credential records
 - ✅ Chain integrity validation
 - ✅ Tamper detection
 
-### QR Codes
-- ✅ QR code generation for credentials
-- ✅ QR code verification and scanning
+### Digital Credentials
+- ✅ QR code generation and verification
 - ✅ Embedded credential data
 - ✅ Device-independent verification
+- ✅ FIDO2/WebAuthn biometric support
+- ✅ Fingerprint and face recognition
 
-### Biometric Authentication
-- ✅ FIDO2/WebAuthn support
-- ✅ Fingerprint recognition
-- ✅ Face recognition
-- ✅ Device-bound authentication
-
-### Payment Processing
-- ✅ Stellar testnet integration
+### Payment & Settlement Processing
+- ✅ Stellar testnet integration (XLM)
 - ✅ Student payment authorization
 - ✅ Merchant payment QR codes
 - ✅ Payment verification and tracking
-- ✅ Transaction history
+- ✅ Transaction history and reporting
 
-### Admin & Compliance
-- ✅ Full audit trail
+### **NEW: Soroban Smart Contracts & Invoice Liquidity** ⭐
+- ✅ **Escrow Smart Contracts**: Secure investor fund management for tokenized invoices
+- ✅ **Invoice Lifecycle**: Draft → Submitted → Funded → Processing → Settled → Closed
+- ✅ **Global Advancement**: Cross-border settlement with multi-currency support
+- ✅ **Immutable Settlement Fees**: Platform, network, and currency conversion fees
+- ✅ **RPC Layer**: Soroban testnet communication with retry logic
+- ✅ **State Machine Validation**: Strict state transitions with audit trails
+- ✅ **REST API**: 7 secured endpoints for invoice and escrow management
+
+### Admin & Operations
+- ✅ Full audit trail with immutable records
 - ✅ User management dashboard
-- ✅ System statistics
-- ✅ GDPR compliance ready
-- ✅ SOC 2 alignment
+- ✅ System statistics and monitoring
+- ✅ Invoice settlement tracking
+- ✅ Global advancement reporting
 
 ## 📋 Prerequisites
 
@@ -187,6 +195,62 @@ This system implements enterprise-grade security:
 - ✅ PCI DSS for payments
 
 See [Security Guide](docs/SECURITY.md) for details.
+
+## 🚀 Soroban Smart Contracts & Invoice Liquidity Network
+
+The system integrates modernized Soroban smart contracts for enterprise-grade tokenized invoice financing:
+
+### Architecture Components
+
+**Escrow Smart Contract** (Stellar Soroban)
+- Secures investor funds until settlement conditions are met
+- Manages cross-border settlement with multi-currency support
+- Emits events for all state transitions
+- Testnet-only deployment (no mainnet risk)
+
+**Invoice Lifecycle Service** (Rust)
+- State machine: Draft → Submitted → Funded → Processing → Settled → Closed
+- Strict validation of state transitions
+- Immutable audit trail for every transition
+- Integration with Soroban contract deployment
+
+**Global Advancement Service** (Rust)
+- Orchestrates multi-currency settlement
+- Calculates fees: platform (1%), network, currency conversion
+- Records settlement fees immutably (INSERT-only)
+- Coordinates with contract release
+
+**REST API Endpoints** (7 secured endpoints)
+```
+POST   /api/v1/escrow/invoices                    # Create invoice
+GET    /api/v1/escrow/invoices/{id}               # Fetch invoice
+GET    /api/v1/escrow/invoices                    # List invoices (paginated)
+PUT    /api/v1/escrow/invoices/{id}/submit        # Submit for funding
+PUT    /api/v1/escrow/invoices/{id}/fund          # Fund & deploy escrow
+PUT    /api/v1/escrow/invoices/{id}/settle        # Settle & release funds
+GET    /api/v1/escrow/escrows/{id}/status         # Get escrow status
+```
+
+### Database Schema
+- **invoices**: Core invoice records with state lifecycle
+- **escrow_contracts**: Investor funds held for tokenized invoices
+- **escrow_state_history**: Immutable audit trail of state transitions
+- **settlement_fees**: Fee tracking for invoice settlement
+
+### Security & Compliance
+- **Fail-closed authorization**: JWT middleware on all endpoints
+- **Ownership verification**: Borrowers access own invoices; investors verified
+- **Immutable records**: Core data never UPDATE after creation
+- **Audit logging**: Every action logged to audit trail
+- **Testnet-only**: Soroban RPC limited to testnet endpoints
+
+### Technology Stack
+- **Soroban SDK**: v21+ for smart contract specifications
+- **stellar-xdr**: v21+ for XDR encoding/decoding
+- **soroban-client**: v0.5+ for testnet RPC communication
+- **SQLite**: Immutable-by-design schema with indexes
+
+See [Soroban Integration Guide](docs/SOROBAN.md) for detailed setup and deployment.
 
 ## 🧪 Testing
 
@@ -335,11 +399,23 @@ This system handles sensitive student identity and payment data. Before deployin
 
 ## 🎯 Roadmap
 
+### v1.0 (Completed) ✅
+- [x] Student identity management with cryptographic credentials
+- [x] Biometric authentication (FIDO2/WebAuthn)
+- [x] Stellar testnet payment integration
+- [x] QR code generation and verification
+- [x] Audit logging and compliance
+- [x] Soroban smart contracts for invoice escrow
+- [x] Invoice lifecycle state machine (6 states)
+- [x] Global advancement settlement coordination
+- [x] REST API with fail-closed authorization
+
 ### v1.1 (Q2 2024)
-- [ ] Webhook support for real-time events
-- [ ] Mobile app (iOS/Android)
-- [ ] Advanced analytics dashboard
+- [ ] Webhook support for real-time settlement events
+- [ ] Mobile app (iOS/Android) with biometric support
+- [ ] Advanced invoice analytics dashboard
 - [ ] Multi-language support
+- [ ] Batch invoice import
 
 ### v1.2 (Q3 2024)
 - [ ] Integration with university systems
