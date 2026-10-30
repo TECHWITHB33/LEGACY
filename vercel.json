@@ -36,37 +36,30 @@
       }
     }
   ],
-  "env": [
-    {
-      "key": "JWT_SECRET",
+  "env": {
+    "JWT_SECRET": {
       "description": "JWT signing secret (32 bytes hex)",
       "example": "your-32-byte-hex-secret-here"
     },
-    {
-      "key": "DATABASE_URL",
+    "DATABASE_URL": {
       "description": "SQLite database URL",
       "example": "sqlite:///data/id_card_system.db"
     },
-    {
-      "key": "STELLAR_NETWORK",
+    "STELLAR_NETWORK": {
       "description": "Stellar network (testnet only)",
       "example": "testnet"
     },
-    {
-      "key": "STELLAR_RPC_URL",
+    "STELLAR_RPC_URL": {
       "description": "Soroban RPC endpoint",
       "example": "https://soroban-testnet.stellar.org"
     },
-    {
-      "key": "STELLAR_HORIZON_URL",
+    "STELLAR_HORIZON_URL": {
       "description": "Stellar Horizon API endpoint",
       "example": "https://horizon-testnet.stellar.org"
     },
-    {
-      "key": "STELLAR_NETWORK_PASSPHRASE",
+    "STELLAR_NETWORK_PASSPHRASE": {
       "description": "Stellar network passphrase for testnet",
       "example": "Test SDF Network ; September 2015"
     }
-  ],
-  "buildCommand": "echo 'Building services individually'"
+  }
 }
