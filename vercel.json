@@ -37,29 +37,11 @@
     }
   ],
   "env": {
-    "JWT_SECRET": {
-      "description": "JWT signing secret (32 bytes hex)",
-      "example": "your-32-byte-hex-secret-here"
-    },
-    "DATABASE_URL": {
-      "description": "SQLite database URL",
-      "example": "sqlite:///data/id_card_system.db"
-    },
-    "STELLAR_NETWORK": {
-      "description": "Stellar network (testnet only)",
-      "example": "testnet"
-    },
-    "STELLAR_RPC_URL": {
-      "description": "Soroban RPC endpoint",
-      "example": "https://soroban-testnet.stellar.org"
-    },
-    "STELLAR_HORIZON_URL": {
-      "description": "Stellar Horizon API endpoint",
-      "example": "https://horizon-testnet.stellar.org"
-    },
-    "STELLAR_NETWORK_PASSPHRASE": {
-      "description": "Stellar network passphrase for testnet",
-      "example": "Test SDF Network ; September 2015"
-    }
+    "JWT_SECRET": "your-32-byte-hex-secret-here",
+    "DATABASE_URL": "sqlite:///data/id_card_system.db",
+    "STELLAR_NETWORK": "testnet",
+    "STELLAR_RPC_URL": "https://soroban-testnet.stellar.org",
+    "STELLAR_HORIZON_URL": "https://horizon-testnet.stellar.org",
+    "STELLAR_NETWORK_PASSPHRASE": "Test SDF Network ; September 2015"
   }
 }
