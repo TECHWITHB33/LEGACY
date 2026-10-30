@@ -4,8 +4,7 @@
     "backend": {
       "root": "backend",
       "runtime": "rust",
-      "buildCommand": "cargo build --release",
-      "startCommand": "./target/release/id-card-system"
+      "buildCommand": "cargo build --release"
     },
     "frontend_react": {
       "root": "frontend_react",
