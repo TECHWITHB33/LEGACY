@@ -1790,7 +1790,7 @@ mod tests {
         assert_eq!(TransactionStatus::Success.as_str(), "success");
         assert_eq!(TransactionStatus::Failed.as_str(), "failed");
     }
-}
+
     // ==================== STUDENT ACCOUNT TESTS ====================
     
     #[test]
