@@ -3673,3 +3673,4 @@ mod tests {
         let result = tx.mark_failed("Error".to_string());
         assert!(result.is_err());
     }
+}
