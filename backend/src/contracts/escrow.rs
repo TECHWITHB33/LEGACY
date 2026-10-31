@@ -291,15 +291,15 @@ impl EscrowState {
 // ============================================================================
 // TOKEN INTERFACE COMPLIANCE
 // ============================================================================
-
-/// The contract complies with Soroban's token interface as defined in SEP-0041.
-///
-/// Key compliance points:
-/// - Transfer operations use standard token semantics (from, to, amount in stroops)
-/// - All amounts are expressed in stroops (the native unit of XLM)
-/// - Transaction signing follows Stellar's standard envelope format
-/// - Errors are propagated using Soroban's standard error codes
-///
-/// References:
-/// - Soroban SDK: https://github.com/stellar/rs-soroban-sdk
-/// - Token Interface: https://stellar.org/docs/learn/glossary#token-contract
+//
+// The contract complies with Soroban's token interface as defined in SEP-0041.
+//
+// Key compliance points:
+// - Transfer operations use standard token semantics (from, to, amount in stroops)
+// - All amounts are expressed in stroops (the native unit of XLM)
+// - Transaction signing follows Stellar's standard envelope format
+// - Errors are propagated using Soroban's standard error codes
+//
+// References:
+// - Soroban SDK: https://github.com/stellar/rs-soroban-sdk
+// - Token Interface: https://stellar.org/docs/learn/glossary#token-contract
